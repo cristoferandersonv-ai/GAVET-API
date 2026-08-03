@@ -1,7 +1,9 @@
 package com.gavet.api.controller;
 
 import java.util.List;
+import java.util.Map;
 
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -25,6 +27,7 @@ public class MascotaController {
     public MascotaController(
             MascotaService mascotaService
     ) {
+
         this.mascotaService =
                 mascotaService;
     }
@@ -104,6 +107,34 @@ public class MascotaController {
             idCliente,
             idMascota,
             request
+        );
+    }
+
+    /*
+     * DELETE /api/clientes/1/mascotas/2
+     *
+     * Realiza una eliminación lógica.
+     */
+    @DeleteMapping("/{idMascota}")
+    public Map<String, Object> eliminarMascota(
+
+        @PathVariable("idCliente")
+        Integer idCliente,
+
+        @PathVariable("idMascota")
+        Integer idMascota
+    ) {
+
+        mascotaService.eliminar(
+            idCliente,
+            idMascota
+        );
+
+        return Map.of(
+            "exito",
+            true,
+            "mensaje",
+            "Mascota eliminada correctamente"
         );
     }
 }

@@ -93,4 +93,25 @@ public interface CitaRepository
         @Param("idCliente")
         Integer idCliente
     );
+
+    /*
+     * Verifica si una mascota tiene una cita activa.
+     */
+    @Query(
+        value =
+            "SELECT COUNT(*) " +
+            "FROM citas c " +
+            "WHERE c.id_mascota = :idMascota " +
+            "AND c.estado IN (" +
+            "'PROXIMA', " +
+            "'CONFIRMADA', " +
+            "'EN_ATENCION'" +
+            ")",
+        nativeQuery = true
+    )
+    long contarCitasActivasPorMascota(
+
+        @Param("idMascota")
+        Integer idMascota
+    );
 }

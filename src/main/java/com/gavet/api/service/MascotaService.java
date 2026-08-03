@@ -15,6 +15,7 @@ import com.gavet.api.entity.Cliente;
 import com.gavet.api.entity.Mascota;
 import com.gavet.api.enums.EspecieMascota;
 import com.gavet.api.enums.SexoMascota;
+import com.gavet.api.repository.CitaRepository;
 import com.gavet.api.repository.ClienteRepository;
 import com.gavet.api.repository.MascotaRepository;
 
@@ -23,16 +24,22 @@ public class MascotaService {
 
     private final MascotaRepository mascotaRepository;
     private final ClienteRepository clienteRepository;
+    private final CitaRepository citaRepository;
 
     public MascotaService(
             MascotaRepository mascotaRepository,
-            ClienteRepository clienteRepository
+            ClienteRepository clienteRepository,
+            CitaRepository citaRepository
     ) {
+
         this.mascotaRepository =
                 mascotaRepository;
 
         this.clienteRepository =
                 clienteRepository;
+
+        this.citaRepository =
+                citaRepository;
     }
 
     /*
@@ -42,7 +49,9 @@ public class MascotaService {
             Integer idCliente
     ) {
 
-        validarCliente(idCliente);
+        validarCliente(
+            idCliente
+        );
 
         return mascotaRepository
             .findByIdClienteAndActivoTrueOrderByIdMascotaAsc(
@@ -61,7 +70,9 @@ public class MascotaService {
             Integer idMascota
     ) {
 
-        validarCliente(idCliente);
+        validarCliente(
+            idCliente
+        );
 
         Mascota mascota =
                 buscarMascota(
@@ -83,8 +94,13 @@ public class MascotaService {
             MascotaRequest request
     ) {
 
-        validarCliente(idCliente);
-        validarDatos(request);
+        validarCliente(
+            idCliente
+        );
+
+        validarDatos(
+            request
+        );
 
         Mascota mascota =
                 new Mascota();
@@ -122,8 +138,13 @@ public class MascotaService {
             MascotaRequest request
     ) {
 
-        validarCliente(idCliente);
-        validarDatos(request);
+        validarCliente(
+            idCliente
+        );
+
+        validarDatos(
+            request
+        );
 
         Mascota mascota =
                 buscarMascota(
@@ -143,6 +164,51 @@ public class MascotaService {
 
         return convertirRespuesta(
             mascotaActualizada
+        );
+    }
+
+    /*
+     * Elimina lógicamente una mascota.
+     *
+     * No se permite si tiene una cita activa.
+     * Las citas antiguas se conservan.
+     */
+    @Transactional
+    public void eliminar(
+            Integer idCliente,
+            Integer idMascota
+    ) {
+
+        validarCliente(
+            idCliente
+        );
+
+        Mascota mascota =
+                buscarMascota(
+                    idCliente,
+                    idMascota
+                );
+
+        long citasActivas =
+                citaRepository
+                    .contarCitasActivasPorMascota(
+                        idMascota
+                    );
+
+        if (citasActivas > 0) {
+
+            throw new ResponseStatusException(
+                HttpStatus.CONFLICT,
+                "No se puede eliminar la mascota porque tiene una cita activa"
+            );
+        }
+
+        mascota.setActivo(
+            false
+        );
+
+        mascotaRepository.save(
+            mascota
         );
     }
 
@@ -260,10 +326,6 @@ public class MascotaService {
             );
         }
 
-        /*
-         * Verifica también que los textos correspondan
-         * a valores válidos.
-         */
         convertirEspecie(
             request.getEspecie()
         );
@@ -277,7 +339,10 @@ public class MascotaService {
             Integer idCliente
     ) {
 
-        if (idCliente == null || idCliente <= 0) {
+        if (
+            idCliente == null ||
+            idCliente <= 0
+        ) {
 
             throw new ResponseStatusException(
                 HttpStatus.BAD_REQUEST,
@@ -287,7 +352,9 @@ public class MascotaService {
 
         Cliente cliente =
                 clienteRepository
-                    .findById(idCliente)
+                    .findById(
+                        idCliente
+                    )
                     .orElseThrow(
                         () ->
                             new ResponseStatusException(
@@ -296,7 +363,11 @@ public class MascotaService {
                             )
                     );
 
-        if (!Boolean.TRUE.equals(cliente.getActivo())) {
+        if (
+            !Boolean.TRUE.equals(
+                cliente.getActivo()
+            )
+        ) {
 
             throw new ResponseStatusException(
                 HttpStatus.NOT_FOUND,
@@ -335,7 +406,9 @@ public class MascotaService {
             return EspecieMascota.valueOf(
                 especie
                     .trim()
-                    .toUpperCase(Locale.ROOT)
+                    .toUpperCase(
+                        Locale.ROOT
+                    )
             );
 
         } catch (Exception error) {
@@ -356,7 +429,9 @@ public class MascotaService {
             return SexoMascota.valueOf(
                 sexo
                     .trim()
-                    .toUpperCase(Locale.ROOT)
+                    .toUpperCase(
+                        Locale.ROOT
+                    )
             );
 
         } catch (Exception error) {
